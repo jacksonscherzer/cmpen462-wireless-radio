@@ -56,3 +56,26 @@ def lowpass_filter(i, q, cutoff_freq, sample_rate):
     q_f = np.real(np.fft.ifft(Y))       #same as above to elimintate noise
 
     return i_f, q_f
+
+def downsample(i, q):
+    """
+    Combine i and  q, then downsample to collect every 10th frequency
+
+    Parameters:
+    i, q: components of filtered signal
+
+    Returns:
+    r_ds: downsampled signal r that combines i and q, and contains every 10th sample
+    """
+
+    # combine signals
+
+    r = i + 1j * q
+
+    # downsample
+
+    r_ds = r[::10]      #takes every 10th sample
+
+    return r_ds
+
+
