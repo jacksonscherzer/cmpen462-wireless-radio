@@ -15,9 +15,13 @@ def downconvert(input_file, carrier_freq, sample_rate):
     i = []
     q = []
     input = []
+
+    #read preamble file 
     with open(input_file, 'r') as f:
         for line in f:
-            input.append(int(line.strip()))
+            input.append(float(line.strip()))
+
+    # downconversion
     for n, sample in enumerate(input):
         i[n] = sample * math.cos(2 * math.pi * carrier_freq * n / sample_rate)
         q[n] = sample * math.sin(2 * math.pi * carrier_freq * n / sample_rate)
@@ -43,9 +47,9 @@ def lowpass_filter(i, q, cutoff_freq, sample_rate):
 
     # calculate frequency for filtering
 
-    # filter i
     freqs = np.fft.fftfreq(N, 1/sample_rate)
 
+    # filter i
     X = np.fft.fft(i)
     X[np.abs(freqs) > cutoff_freq] = 0
     i_f = np.real(np.fft.ifft(X))       #use real to remove imaginary parts and eliminate noise
@@ -69,13 +73,86 @@ def downsample(i, q):
     """
 
     # combine signals
-
     r = i + 1j * q
 
     # downsample
-
     r_ds = r[::10]      #takes every 10th sample
 
     return r_ds
 
+def correlate(r, preamble_file):
+    """
+    Use the given preamble to correlate our signal with the preamble to find peak coorelation
+
+    Parameters:
+    r: downsampled signal
+    preamble_file: path to file containing preamble data
+
+    Returns:
+    symbols: all matching symbols after removing preamble
+    """
+
+    #read preamble file
+    preamble = []
+    with open(preamble_file, 'r') as f:
+        for line in f:
+            preamble.append(complex(line.strip()))
+
+    # make preamble numpy array
+    preamble = np.array(preamble)
+    
+    # correlate
+    corr = np.correlate(r, preamble, mode='valid')
+
+    # find start index
+    index = np.argmax(np.abs(corr))
+
+    #set where data starts
+    start = index + len(preamble)
+    symbols = r[start:]
+
+    #test to check peak mag
+    print("Peak corr mag: ", np.max(np.abs(corr)))
+
+    return symbols
+
+def demodulate(symbols):
+    """
+    Match each symbol value to closest of -3, -1, 1 and 3
+
+    Parameters:
+    symbols: correlated values of our signal
+
+    Returns:
+    binary: binary string created from mapping signal to grid
+    """
+
+    #define levels
+    levels = np.array([-3, -1, 1, 3])
+
+    #create mapping based on diagram
+    mapping = {
+        -3: "10",
+        -1: "11",
+        1: "01",
+        3: "00"
+    }
+
+    #process
+    binary = ""
+
+    for s in symbols:
+
+        #get real and imaginary
+        I = np.real(s)
+        Q = np.imag(s)
+
+        #map each I and Q to nearest level
+        I_m = levels[np.argmin(np.abs(levels - I))]
+        Q_m = levels[np.argmin(np.abs(levels - Q))]
+
+        #add to binary
+        binary += mapping[Q_m] + mapping[I_m]
+
+    return binary
 
