@@ -156,3 +156,49 @@ def demodulate(symbols):
 
     return binary
 
+def ascii(binary):
+    """
+    Convert binary string to ascii values
+
+    Parameters:
+    binary: string of bits created from demodulation
+
+    Return:
+    ascii: string of ascii characters
+    """
+
+    ascii = ""
+
+    #create integer and convert to char
+    for i in range(0, len(binary), 8):
+        #create byte
+        byte = binary[i:i+8]
+
+        #ignore incomplete bytes (if binary is not length 0 mod 8)
+        if len(byte) < 8:
+            break
+            
+        #create char
+        ascii += chr(int(byte, 2))      #base 2 --> integer
+
+    return ascii
+
+input_file = 'input.txt'
+preamble_file = 'preamble.txt'
+carrier_freq = 20
+sampling_rate = 100
+cutoff_freq = 5.1
+
+i, q = downconvert(input_file, carrier_freq, sampling_rate)
+
+i_f, q_f = lowpass_filter(i, q, cutoff_freq, sampling_rate)
+
+r = downsample(i_f, q_f)
+
+symbols = correlate(r, preamble_file)
+
+binary = demodulate(symbols)
+
+text = ascii(binary)
+
+print(text)
