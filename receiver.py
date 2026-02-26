@@ -23,8 +23,8 @@ def downconvert(input_file, carrier_freq, sample_rate):
 
     # downconversion
     for n, sample in enumerate(input):
-        i[n] = sample * math.cos(2 * math.pi * carrier_freq * n / sample_rate)
-        q[n] = sample * math.sin(2 * math.pi * carrier_freq * n / sample_rate)
+        i.append(sample * math.cos(2 * math.pi * carrier_freq * n / sample_rate))
+        q.append(sample * math.sin(2 * math.pi * carrier_freq * n / sample_rate))
     
     return i, q
 
@@ -96,7 +96,11 @@ def correlate(r, preamble_file):
     preamble = []
     with open(preamble_file, 'r') as f:
         for line in f:
-            preamble.append(complex(line.strip()))
+            s = line.strip()
+            if not s:
+                continue
+            s = s.replace("i", "j")     #python uses j for imaginary values, while the preamble uses i
+            preamble.append(complex(s))
 
     # make preamble numpy array
     preamble = np.array(preamble)
@@ -113,6 +117,8 @@ def correlate(r, preamble_file):
 
     #test to check peak mag
     print("Peak corr mag: ", np.max(np.abs(corr)))
+
+    #print(symbols)
 
     return symbols
 
@@ -137,6 +143,9 @@ def demodulate(symbols):
         1: "01",
         3: "00"
     }
+
+    #Q_bits = { 3:"00", 1:"01", -1:"11", -3:"10" }
+    #I_bits = { -3:"10", -1:"11",  1:"01",  3:"00" } 
 
     #process
     binary = ""
