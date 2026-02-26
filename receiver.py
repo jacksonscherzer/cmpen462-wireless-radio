@@ -1,4 +1,5 @@
-import math, numpy as np
+import math, numpy as np, tkinter as tk
+from tkinter import filedialog
 
 def downconvert(input_file, carrier_freq, sample_rate):
     """
@@ -197,11 +198,34 @@ def ascii(binary):
 
     return ascii
 
-input_file = 'input.txt'
-preamble_file = 'preamble.txt'
+
+
+input_file = ''
+preamble_file = ''
 carrier_freq = 20
 sampling_rate = 100
 cutoff_freq = 5.1
+
+# hide root window
+root = tk.Tk()
+root.withdraw()
+
+#open file picker dialog
+input_file = filedialog.askopenfilename(title="Select input file", filetypes=[("Text files", "*.txt")])
+preamble_file = filedialog.askopenfilename(title="Select preamble file", filetypes=[("Text files", "*.txt")])
+
+#prompt other values
+while True:
+    try:
+        carrier_freq = float(input("Enter carrier frequency (Hz): "))
+        sampling_rate = float(input("Enter sampling rate (Hz): "))
+        cutoff_freq = float(input("Enter cutoff frequency (positive end of range) (Hz): "))
+        if cutoff_freq <= 0:
+            print("Cutoff frequency must be positive.")
+            continue
+        break
+    except ValueError:
+        print("Invalid input. Please enter numeric values for frequencies and sampling rate.")
 
 i, q = downconvert(input_file, carrier_freq, sampling_rate)
 
