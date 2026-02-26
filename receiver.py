@@ -73,7 +73,7 @@ def downsample(i, q):
     """
 
     # combine signals
-    r = i + 1j * q
+    r = i + (1j * q)
 
     # downsample
     r_ds = r[::10]      #takes every 10th sample
@@ -83,6 +83,8 @@ def downsample(i, q):
 def correlate(r, preamble_file):
     """
     Use the given preamble to correlate our signal with the preamble to find peak coorelation
+    Extra work is required to estimate the complex scalar h and equalize the entire downsampled stream before returning symbols
+    This ensures we can properly map the symbols to the grid in the next step, and that we are not just looking at noise
 
     Parameters:
     r: downsampled signal
@@ -107,18 +109,21 @@ def correlate(r, preamble_file):
     
     # correlate
     corr = np.correlate(r, preamble, mode='valid')
+    idx = np.argmax(np.abs(corr))         # preamble starts at r[idx]
+    L = len(preamble)
 
-    # find start index
-    index = np.argmax(np.abs(corr))
+    # extract received preamble segment
+    r_seg = r[idx:idx+L]
 
-    #set where data starts
-    start = index + len(preamble)
-    symbols = r[start:]
+    # estimate complex scalar h: r_seg ≈ h * preamble
+    h = np.vdot(preamble, r_seg) / np.vdot(preamble, preamble)
 
-    #test to check peak mag
-    print("Peak corr mag: ", np.max(np.abs(corr)))
+    # equalize entire downsampled stream
+    r_eq = r / h
 
-    #print(symbols)
+    # return data symbols (after preamble)
+    start = idx + L
+    symbols = r_eq[start:]
 
     return symbols
 
