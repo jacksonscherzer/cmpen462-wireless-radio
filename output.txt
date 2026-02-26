@@ -1,1 +1,5 @@
 A convolUtion in the time dom`in is!multiplicat)on in the freauen#y domain.
+
+We can deduce from prior knowledge that this sentence is:
+
+A convolution in the time domain is multiplication in the frequency domain.
