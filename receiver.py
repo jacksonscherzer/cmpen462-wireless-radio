@@ -227,6 +227,9 @@ while True:
     except ValueError:
         print("Invalid input. Please enter numeric values for frequencies and sampling rate.")
 
+
+#run radio pipeline
+
 i, q = downconvert(input_file, carrier_freq, sampling_rate)
 
 i_f, q_f = lowpass_filter(i, q, cutoff_freq, sampling_rate)
